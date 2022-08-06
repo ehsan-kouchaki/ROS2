@@ -1,0 +1,219 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="walker" >
+
+  <!-- Constants for robot dimensions -->
+  <xacro:property name="mass" value="1" /> <!-- arbitrary value for mass -->
+  <xacro:property name="width" value="0.1" /> <!-- Square dimensions (widthxwidth) of beams -->
+  <xacro:property name="shank_length" value="1" /> <!-- Link 1 -->
+  <xacro:property name="thigh_length" value="0.7" /> <!-- Link 2 -->
+  <xacro:property name="body_length" value="0.5" /> <!-- Link 3 -->
+  <xacro:property name="axel_offset" value="0.05" /> <!-- Space btw top of beam and the each joint -->
+
+  <xacro:arg name="use_sim" default="false" />
+
+  <!-- Enable setting arguments from the launch file -->
+  <xacro:arg name="use_fake_hardware" default="false" />
+  <xacro:arg name="fake_sensor_commands" default="false" />
+  <xacro:arg name="prefix" default="" />
+  <xacro:arg name="slowdown" default="2.0" />
+
+  <material name="orange">
+    <color rgba="1 0.5 0 1"/>
+  </material>
+
+  <material name="yellow">
+    <color rgba="1 1 0 1"/>
+  </material>
+
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <!-- Upper Boady -->
+  <link name="base_link">
+    <collision>
+      <origin xyz="0 0 ${shank_length + thigh_length - 1.5*width}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${body_length} ${width}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 ${shank_length + thigh_length - 1.5*width}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${body_length} ${width}"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 ${shank_length + thigh_length - 1.5*width}" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass / 12.0 * (width*width + body_length*body_length)}" ixy="0.0" ixz="0.0"
+        iyy="${mass / 12.0 * (width*width + width*width)}" iyz="0.0"
+        izz="${mass / 12.0 * (width*width + body_length*body_length)}"/>
+    </inertial>
+  </link>
+  
+  <joint name="right_hip" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_thigh"/>
+    <origin xyz="0 ${-body_length/2 - width/2} ${shank_length + thigh_length - 1.5*width}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.7"/>
+  </joint>  
+  
+  <!-- Right Thigh -->
+  <link name="right_thigh">
+    <collision>
+      <origin xyz="0 0 ${-thigh_length/2 + width/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${width} ${thigh_length}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 ${-thigh_length/2 + width/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${width} ${thigh_length}"/>
+      </geometry>
+      <material name="yellow"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 ${-thigh_length/2 + width/2}" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass / 12.0 * (width*width + thigh_length*thigh_length)}" ixy="0.0" ixz="0.0"
+        iyy="${mass / 12.0 * (thigh_length*thigh_length + width*width)}" iyz="0.0"
+        izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>  
+
+  <joint name="left_hip" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_thigh"/>
+    <origin xyz="0 ${body_length/2 + width/2} ${shank_length + thigh_length - 1.5*width}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.7"/>
+  </joint>  
+
+  <!-- Left Thigh -->
+  <link name="left_thigh">
+    <collision>
+      <origin xyz="0 0 ${-thigh_length/2 + width/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${width} ${thigh_length}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 ${-thigh_length/2 + width/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${width} ${thigh_length}"/>
+      </geometry>
+      <material name="yellow"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 ${-thigh_length/2 + width/2}" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass / 12.0 * (width*width + thigh_length*thigh_length)}" ixy="0.0" ixz="0.0"
+        iyy="${mass / 12.0 * (thigh_length*thigh_length + width*width)}" iyz="0.0"
+        izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>  
+
+  <joint name="right_knee" type="continuous">
+    <parent link="right_thigh"/>
+    <child link="right_shank"/>
+    <origin xyz="0 ${-width} ${-thigh_length + width}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.7"/>
+  </joint>  
+  
+  <!-- Right Shank -->
+  <link name="right_shank">
+    <collision>
+      <origin xyz="0 0 ${-shank_length/2 + width/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${width} ${shank_length}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 ${-shank_length/2 + width/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${width} ${shank_length}"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 ${-shank_length/2 + width/2}" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass / 12.0 * (width*width + shank_length*shank_length)}" ixy="0.0" ixz="0.0"
+        iyy="${mass / 12.0 * (shank_length*shank_length + width*width)}" iyz="0.0"
+        izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>
+ 
+  <joint name="left_knee" type="continuous">
+    <parent link="left_thigh"/>
+    <child link="left_shank"/>
+    <origin xyz="0 ${width} ${-thigh_length + width}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.7"/>
+  </joint>  
+  
+  <!-- Left Shank -->
+  <link name="left_shank">
+    <collision>
+      <origin xyz="0 0 ${-shank_length/2 + width/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${width} ${shank_length}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 ${-shank_length/2 + width/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${width} ${width} ${shank_length}"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="0 0 ${-shank_length/2 + width/2}" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass / 12.0 * (width*width + shank_length*shank_length)}" ixy="0.0" ixz="0.0"
+        iyy="${mass / 12.0 * (shank_length*shank_length + width*width)}" iyz="0.0"
+        izz="${mass / 12.0 * (width*width + width*width)}"/>
+    </inertial>
+  </link>
+  
+  <link name="imu">
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="1.0" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.0"/>
+    </inertial>
+  </link>
+  <joint name="boady_to_imu" type="fixed">
+    <origin xyz="0 0 ${shank_length + thigh_length - 1.5*width}"/>
+    <parent link="base_link"/>
+    <child link="imu"/>
+    <dynamics damping="0.0" friction="0.0"/>
+  </joint>
+  
+  <gazebo reference="imu">
+    <sensor name="robot_imu_sensor" type="imu">
+      <always_on>1</always_on>
+      <update_rate>10.0</update_rate>
+    </sensor>
+  </gazebo>
+
+</robot>
